@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shimbu | Python · C · Web Developer</title>
+<meta name="description" content="Shimbu: Python developer, C programmer and web developer, student at BVRIT. Portfolio, freelancing and basic video and photo editing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07070f;
+    --panel: rgba(20, 18, 44, .5);
+    --border: rgba(167, 139, 250, .2);
+    --text: #f1eeff;
+    --muted: #a7a3c9;
+    --violet: #a78bfa;
+    --pink: #f0abfc;
+    --cyan: #67e8f9;
+    --peach: #fdba74;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text);
+    line-height: 1.65; overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  h1, h2, h3 { font-family: 'Syne', sans-serif; line-height: 1.1; }
+  .container { width: min(1120px, 92%); margin-inline: auto; position: relative; z-index: 3; }
+  section { padding: 100px 0; position: relative; }
+
+  /* ================= AESTHETIC BACKGROUND ================= */
+  #stars { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .aurora { position: fixed; inset: -10%; z-index: 1; pointer-events: none; filter: blur(70px); opacity: .75; }
+  .blob { position: absolute; border-radius: 50%; will-change: transform; }
+  .b1 { width: 46vmax; height: 46vmax; left: -8%; top: -12%; background: radial-gradient(circle, rgba(167,139,250,.55), transparent 65%); animation: drift1 22s ease-in-out infinite; }
+  .b2 { width: 40vmax; height: 40vmax; right: -8%; top: 8%; background: radial-gradient(circle, rgba(103,232,249,.38), transparent 65%); animation: drift2 26s ease-in-out infinite; }
+  .b3 { width: 44vmax; height: 44vmax; left: 25%; bottom: -22%; background: radial-gradient(circle, rgba(240,171,252,.4), transparent 65%); animation: drift3 30s ease-in-out infinite; }
+  @keyframes drift1 { 50% { transform: translate(8vw, 10vh) scale(1.1); } }
+  @keyframes drift2 { 50% { transform: translate(-9vw, 8vh) scale(.92); } }
+  @keyframes drift3 { 50% { transform: translate(6vw, -10vh) scale(1.08); } }
+  .grain {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  /* cursor spotlight (follows mouse) */
+  .spotlight {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 40%), rgba(167,139,250,.16), transparent 60%);
+  }
+  /* custom cursor */
+  .cursor-dot, .cursor-ring { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 100; border-radius: 50%; opacity: 0; transition: opacity .3s; }
+  .cursor-dot { width: 7px; height: 7px; background: var(--cyan); margin: -3.5px 0 0 -3.5px; box-shadow: 0 0 14px var(--cyan); }
+  .cursor-ring { width: 38px; height: 38px; margin: -19px 0 0 -19px; border: 1px solid rgba(167,139,250,.7); transition: width .25s, height .25s, margin .25s, background .25s, opacity .3s; }
+  .cursor-ring.big { width: 64px; height: 64px; margin: -32px 0 0 -32px; background: rgba(167,139,250,.12); }
+  .cursor-on .cursor-dot, .cursor-on .cursor-ring { opacity: 1; }
+  @media (hover: hover) and (pointer: fine) { body.cursor-on, body.cursor-on a, body.cursor-on button { cursor: none; } }
+
+  /* ================= NAV ================= */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: rgba(7,7,15,.55); border-bottom: 1px solid var(--border);
+  }
+  nav { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; letter-spacing: .02em; }
+  .logo span { color: var(--violet); }
+  .nav-links { display: flex; gap: 4px; list-style: none; }
+  .nav-links a { display: block; padding: 8px 16px; border-radius: 999px; font-size: .92rem; color: var(--muted); border: 1px solid transparent; transition: all .25s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--text); background: var(--panel); border-color: var(--border); }
+  .menu-btn { display: none; background: var(--panel); border: 1px solid var(--border); color: var(--text); width: 42px; height: 42px; border-radius: 12px; font-size: 1.2rem; cursor: pointer; }
+
+  /* ================= HOME ================= */
+  .hero { min-height: 100vh; display: flex; align-items: center; padding: 120px 0 80px; }
+  .hero-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; align-items: center; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border); backdrop-filter: blur(8px);
+    font-size: .85rem; color: var(--muted); margin-bottom: 22px;
+  }
+  .badge i { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px #4ade80; animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .hero h1 { font-size: clamp(3.6rem, 11vw, 7.5rem); font-weight: 800; letter-spacing: -.03em; margin-bottom: 14px; }
+  .grad { background: linear-gradient(100deg, var(--violet), var(--pink) 50%, var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; background-size: 200% auto; animation: shine 7s linear infinite; }
+  @keyframes shine { to { background-position: 200% center; } }
+  .typed { font-family: 'JetBrains Mono', monospace; font-size: clamp(1rem, 2.4vw, 1.35rem); color: var(--cyan); min-height: 1.9em; margin-bottom: 16px; }
+  .typed::after { content: "▍"; margin-left: 2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .hero p.lead { color: var(--muted); max-width: 520px; font-size: 1.08rem; margin-bottom: 32px; }
+  .btn-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 14px 30px; border-radius: 999px; font-weight: 600; font-size: .96rem; font-family: inherit;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer;
+    backdrop-filter: blur(8px); transition: transform .2s, box-shadow .25s;
+  }
+  .btn:hover { transform: translateY(-3px); }
+  .btn-primary { border: none; color: #0b0a18; background: linear-gradient(100deg, var(--violet), var(--pink)); box-shadow: 0 10px 30px rgba(167,139,250,.35); }
+  .btn-primary:hover { box-shadow: 0 14px 40px rgba(240,171,252,.5); }
+
+  /* hero visual: parallax orb */
+  .orb-wrap { position: relative; aspect-ratio: 1; max-width: 430px; width: 100%; margin-inline: auto; }
+  .orb-layer { position: absolute; inset: 0; display: grid; place-items: center; transition: transform .15s ease-out; }
+  .orb {
+    width: 62%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #fff9, transparent 30%), radial-gradient(circle at 40% 40%, #c4b5fd, #7c3aed 55%, #1e1b4b);
+    box-shadow: 0 0 80px rgba(167,139,250,.55), inset -20px -20px 50px rgba(0,0,0,.5);
+    animation: float 7s ease-in-out infinite;
+  }
+  @keyframes float { 50% { transform: translateY(-16px); } }
+  .ring { position: absolute; border-radius: 50%; border: 1px dashed rgba(167,139,250,.35); animation: spin linear infinite; }
+  .ring.r1 { width: 82%; height: 82%; animation-duration: 20s; }
+  .ring.r2 { width: 100%; height: 100%; animation-duration: 34s; animation-direction: reverse; }
+  .ring::after { content: ""; position: absolute; top: -6px; left: 50%; width: 12px; height: 12px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 16px var(--cyan); }
+  .ring.r2::after { background: var(--pink); box-shadow: 0 0 16px var(--pink); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .tag-float {
+    position: absolute; padding: 7px 14px; border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: .76rem;
+    background: var(--panel); border: 1px solid var(--border); backdrop-filter: blur(10px);
+  }
+  .tf1 { top: 6%; right: 0; color: var(--cyan); }
+  .tf2 { bottom: 16%; left: -2%; color: var(--pink); }
+  .tf3 { bottom: 2%; right: 14%; color: var(--peach); }
+
+  /* ================= SHARED ================= */
+  .section-head { margin-bottom: 40px; }
+  .section-head .kicker { font-family: 'JetBrains Mono', monospace; color: var(--violet); font-size: .85rem; letter-spacing: .14em; text-transform: uppercase; }
+  .section-head h2 { font-size: clamp(2.2rem, 5vw, 3.4rem); margin: 10px 0 12px; letter-spacing: -.02em; }
+  .section-head p { color: var(--muted); max-width: 560px; }
+  .center { text-align: center; }
+  .center p { margin-inline: auto; }
+
+  /* ================= EXPLORE ================= */
+  .tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 34px; }
+  .center + .tabs, .tabs.center { justify-content: center; }
+  .tab { padding: 9px 22px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); font: 500 .92rem 'Inter', sans-serif; cursor: pointer; transition: all .2s; }
+  .tab:hover { color: var(--text); }
+  .tab.on { color: #0b0a18; background: linear-gradient(100deg, var(--violet), var(--pink)); border-color: transparent; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+  .card {
+    position: relative; padding: 28px; border-radius: 22px; background: var(--panel); border: 1px solid var(--border);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); overflow: hidden;
+    transform-style: preserve-3d; transition: transform .2s ease-out, border-color .3s, box-shadow .3s;
+  }
+  .card::before { content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity .3s; background: radial-gradient(380px circle at var(--cx, 50%) var(--cy, 0%), rgba(167,139,250,.28), transparent 60%); }
+  .card:hover { border-color: rgba(167,139,250,.6); box-shadow: 0 20px 50px rgba(124,58,237,.22); }
+  .card:hover::before { opacity: 1; }
+  .card > * { position: relative; }
+  .card .icon { font-size: 2rem; margin-bottom: 14px; }
+  .card h3 { font-size: 1.35rem; margin-bottom: 8px; }
+  .card p { color: var(--muted); font-size: .95rem; margin-bottom: 16px; }
+  .tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tags span { font-family: 'JetBrains Mono', monospace; font-size: .72rem; padding: 4px 10px; border-radius: 8px; background: rgba(103,232,249,.1); color: var(--cyan); }
+  .card.hide { display: none; }
+  .note { margin-top: 26px; font-size: .86rem; color: var(--muted); text-align: center; }
+
+  /* ================= FREELANCE ================= */
+  .free-box { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .panel { padding: clamp(26px, 4vw, 40px); border-radius: 26px; background: var(--panel); border: 1px solid var(--border); backdrop-filter: blur(12px); }
+  .panel h3 { font-size: 1.6rem; margin-bottom: 12px; }
+  .panel p { color: var(--muted); margin-bottom: 18px; }
+  .checks { list-style: none; display: grid; gap: 12px; }
+  .checks li { display: flex; gap: 12px; align-items: flex-start; }
+  .checks li::before { content: "✦"; color: var(--pink); flex-shrink: 0; }
+  .steps { counter-reset: s; list-style: none; display: grid; gap: 16px; }
+  .steps li { counter-increment: s; display: flex; gap: 14px; align-items: flex-start; }
+  .steps li::before { content: counter(s); flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--violet), var(--pink)); color: #0b0a18; font-weight: 700; font-size: .85rem; }
+
+  /* ================= EDITING ================= */
+  .edit-wrap { display: grid; grid-template-columns: 1fr 1.1fr; gap: 28px; align-items: stretch; }
+  .film {
+    border-radius: 26px; border: 1px solid var(--border); background: var(--panel); backdrop-filter: blur(12px);
+    padding: 26px; display: flex; flex-direction: column; justify-content: center; gap: 18px;
+  }
+  .timeline { display: grid; gap: 10px; }
+  .track { height: 34px; border-radius: 9px; position: relative; overflow: hidden; background: rgba(255,255,255,.05); }
+  .clip { position: absolute; top: 3px; bottom: 3px; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; font-size: .72rem; font-family: 'JetBrains Mono', monospace; color: #0b0a18; font-weight: 500; }
+  .c-v { background: linear-gradient(90deg, var(--violet), var(--pink)); }
+  .c-a { background: linear-gradient(90deg, var(--cyan), #86efac); }
+  .c-t { background: linear-gradient(90deg, var(--peach), var(--pink)); }
+  .playhead { position: absolute; top: -6px; bottom: -6px; width: 2px; background: #fff; box-shadow: 0 0 10px #fff; left: 0; animation: scrub 7s linear infinite; z-index: 4; }
+  @keyframes scrub { to { left: 100%; } }
+  .tl-wrap { position: relative; }
+  .film small { color: var(--muted); }
+  .edit-list { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .mini { padding: 22px; border-radius: 20px; background: var(--panel); border: 1px solid var(--border); backdrop-filter: blur(12px); transition: transform .25s, border-color .25s; }
+  .mini:hover { transform: translateY(-5px); border-color: rgba(167,139,250,.6); }
+  .mini .icon { font-size: 1.7rem; margin-bottom: 8px; }
+  .mini h3 { font-size: 1.05rem; margin-bottom: 4px; }
+  .mini p { font-size: .88rem; color: var(--muted); }
+
+  /* ================= CONTACT ================= */
+  .cta {
+    text-align: center; padding: clamp(40px, 7vw, 76px) 24px; border-radius: 30px;
+    background: linear-gradient(135deg, rgba(167,139,250,.2), rgba(103,232,249,.1)); border: 1px solid var(--border); backdrop-filter: blur(12px);
+  }
+  .cta h2 { font-size: clamp(2rem, 5vw, 3.2rem); margin-bottom: 12px; }
+  .cta p { color: var(--muted); max-width: 480px; margin: 0 auto 28px; }
+  footer { position: relative; z-index: 3; text-align: center; padding: 34px 0; color: var(--muted); font-size: .88rem; border-top: 1px solid var(--border); }
+
+  /* ================= REVEAL + RESPONSIVE ================= */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity .8s ease, transform .8s ease; }
+  .reveal.show { opacity: 1; transform: none; }
+  @media (max-width: 860px) {
+    section { padding: 76px 0; }
+    .hero-grid, .free-box, .edit-wrap { grid-template-columns: 1fr; }
+    .hero-grid { text-align: center; }
+    .hero p.lead { margin-inline: auto; }
+    .btn-row { justify-content: center; }
+    .orb-wrap { order: -1; max-width: 280px; }
+    .menu-btn { display: block; }
+    .nav-links { position: absolute; top: 68px; left: 0; right: 0; flex-direction: column; gap: 0; background: rgba(7,7,15,.96); border-bottom: 1px solid var(--border); max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+    .nav-links.open { max-height: 380px; }
+    .nav-links a { border-radius: 0; text-align: center; padding: 16px; }
+    .edit-list { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="aurora" aria-hidden="true" id="aurora">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+</div>
+<div class="spotlight" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor-ring" id="ring" aria-hidden="true"></div>
+<div class="cursor-dot" id="dot" aria-hidden="true"></div>
+
+<header>
+  <nav class="container">
+    <a href="#home" class="logo">shimbu<span>.</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home" class="active">Home</a></li>
+      <li><a href="#explore">Explore</a></li>
+      <li><a href="#freelance">Freelance</a></li>
+      <li><a href="#editing">Editing</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ HOME ============ -->
+  <section class="hero" id="home">
+    <div class="container hero-grid">
+      <div>
+        <div class="badge"><i></i> Student at BVRIT · Open for freelance</div>
+        <h1 class="grad">Shimbu</h1>
+        <div class="typed" id="typed"></div>
+        <p class="lead">I'm a student at BVRIT who loves building things with code. I work in Python and C, I make websites, and I take on freelance projects, with basic video and photo editing as a separate skill.</p>
+        <div class="btn-row">
+          <a href="#explore" class="btn btn-primary">✦ Explore my work</a>
+          <a href="#contact" class="btn">Hire me</a>
+        </div>
+      </div>
+      <div class="orb-wrap" aria-hidden="true">
+        <div class="orb-layer" data-depth="10"><div class="ring r2"></div></div>
+        <div class="orb-layer" data-depth="18"><div class="ring r1"></div></div>
+        <div class="orb-layer" data-depth="28"><div class="orb"></div></div>
+        <div class="orb-layer" data-depth="45">
+          <span class="tag-float tf1">print("hello")</span>
+          <span class="tag-float tf2">int main() { }</span>
+          <span class="tag-float tf3">&lt;web/&gt;</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EXPLORE ============ -->
+  <section id="explore">
+    <div class="container">
+      <div class="section-head center reveal">
+        <div class="kicker">// explore</div>
+        <h2><span class="grad">My portfolio</span></h2>
+        <p>What I know and what I've built. Pick a category.</p>
+      </div>
+
+      <div class="tabs center reveal" role="tablist">
+        <button class="tab on" data-filter="all">All</button>
+        <button class="tab" data-filter="skills">Skills</button>
+        <button class="tab" data-filter="projects">Projects</button>
+      </div>
+
+      <div class="cards">
+        <article class="card reveal" data-cat="skills">
+          <div class="icon">🐍</div><h3>Python Developer</h3>
+          <p>Scripts, automation and backend logic written in clean, readable Python.</p>
+          <div class="tags"><span>Python</span><span>Automation</span><span>Problem solving</span></div>
+        </article>
+        <article class="card reveal" data-cat="skills">
+          <div class="icon">⚙️</div><h3>C Programmer</h3>
+          <p>Strong fundamentals: pointers, memory, data structures and algorithms.</p>
+          <div class="tags"><span>C</span><span>DSA</span><span>Logic building</span></div>
+        </article>
+        <article class="card reveal" data-cat="skills">
+          <div class="icon">🌐</div><h3>Web Development</h3>
+          <p>Responsive, good-looking websites with HTML, CSS and JavaScript.</p>
+          <div class="tags"><span>HTML</span><span>CSS</span><span>JavaScript</span></div>
+        </article>
+        <article class="card reveal" data-cat="projects">
+          <div class="icon">🚀</div><h3>Project One</h3>
+          <p>Short description of your best project goes here. Say what it does and what you learned.</p>
+          <div class="tags"><span>Python</span><span>Tag 2</span></div>
+        </article>
+        <article class="card reveal" data-cat="projects">
+          <div class="icon">🛠️</div><h3>Project Two</h3>
+          <p>Another project, maybe a C program or a college mini project. Add a link later.</p>
+          <div class="tags"><span>C</span><span>Tag 2</span></div>
+        </article>
+        <article class="card reveal" data-cat="projects">
+          <div class="icon">✨</div><h3>This Website</h3>
+          <p>My own portfolio, built with a space-aesthetic background and cursor tracking.</p>
+          <div class="tags"><span>HTML</span><span>CSS</span><span>JavaScript</span></div>
+        </article>
+      </div>
+      <p class="note reveal">The two project cards are placeholders. Replace them with your real projects.</p>
+    </div>
+  </section>
+
+  <!-- ============ FREELANCE ============ -->
+  <section id="freelance">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="kicker">// freelancing</div>
+        <h2>Work with <span class="grad">me</span></h2>
+        <p>I take on small freelance projects alongside my studies. Clear communication, honest timelines.</p>
+      </div>
+      <div class="free-box">
+        <div class="panel reveal">
+          <h3>What I can do</h3>
+          <p>Services I offer as a freelancer:</p>
+          <ul class="checks">
+            <li>Personal and portfolio websites</li>
+            <li>Landing pages and small business sites</li>
+            <li>Python scripts and automation tools</li>
+            <li>C programming help and project assistance</li>
+            <li>Basic video and photo editing (see below)</li>
+          </ul>
+        </div>
+        <div class="panel reveal">
+          <h3>How it works</h3>
+          <p>Simple process, no surprises:</p>
+          <ol class="steps">
+            <li><div><strong>Tell me your idea</strong><br><span style="color:var(--muted)">Message me what you need and when.</span></div></li>
+            <li><div><strong>We agree on scope</strong><br><span style="color:var(--muted)">Clear deliverables, timeline and price.</span></div></li>
+            <li><div><strong>I build it</strong><br><span style="color:var(--muted)">You get updates and can ask for changes.</span></div></li>
+            <li><div><strong>Delivery</strong><br><span style="color:var(--muted)">Final files, ready to use.</span></div></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EDITING (separate skill) ============ -->
+  <section id="editing">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="kicker">// separate skill</div>
+        <h2>Basic <span class="grad">editing</span></h2>
+        <p>Apart from coding, I also do basic editing. Good for reels, simple videos and clean photos.</p>
+      </div>
+      <div class="edit-wrap">
+        <div class="film reveal">
+          <div class="tl-wrap">
+            <div class="timeline">
+              <div class="track"><div class="clip c-v" style="left:2%;width:46%">video</div><div class="clip c-v" style="left:50%;width:46%">video</div></div>
+              <div class="track"><div class="clip c-t" style="left:8%;width:30%">text</div><div class="clip c-t" style="left:58%;width:26%">text</div></div>
+              <div class="track"><div class="clip c-a" style="left:2%;width:94%">audio</div></div>
+            </div>
+            <div class="playhead"></div>
+          </div>
+          <small>Cut, trim, add text and music, and export. Simple, clean edits.</small>
+        </div>
+        <div class="edit-list">
+          <div class="mini reveal"><div class="icon">🎬</div><h3>Video trimming</h3><p>Cuts, joins and basic transitions.</p></div>
+          <div class="mini reveal"><div class="icon">📱</div><h3>Reels &amp; shorts</h3><p>Vertical edits with captions.</p></div>
+          <div class="mini reveal"><div class="icon">🖼️</div><h3>Photo editing</h3><p>Crop, colour fix and cleanup.</p></div>
+          <div class="mini reveal"><div class="icon">🎵</div><h3>Audio &amp; music</h3><p>Background music and volume balance.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section id="contact">
+    <div class="container">
+      <div class="cta reveal">
+        <h2>Let's build <span class="grad">something</span></h2>
+        <p>Have a project, an idea, or an edit you need? Send me a message.</p>
+        <a href="mailto:your-email@example.com" class="btn btn-primary">✉️ Say hello</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>© <span id="year"></span> Shimbu · BVRIT · Made with code and stars ✦</footer>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  /* ========== STARFIELD (parallax with mouse) ========== */
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [], shooters = [];
+  let mx = 0, my = 0, smx = 0, smy = 0;     // mouse (-0.5..0.5) and smoothed value
+
+  function resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    W = canvas.width = innerWidth * dpr;
+    H = canvas.height = innerHeight * dpr;
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    const n = Math.round(innerWidth * innerHeight / 5200);
+    stars = Array.from({ length: n }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      r: (Math.random() * 1.3 + .3) * dpr,
+      z: Math.random() * .8 + .2,
+      p: Math.random() * 6.28,
+      h: [250, 280, 190, 320][Math.floor(Math.random() * 4)]
+    }));
+  }
+  resize(); addEventListener('resize', resize);
+
+  function frame(t) {
+    smx += (mx - smx) * .06; smy += (my - smy) * .06;
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      const tw = reduce ? 1 : .55 + .45 * Math.sin(t / 650 + s.p);
+      const x = (s.x - smx * 70 * s.z * (W / innerWidth) + W) % W;
+      const y = (s.y - smy * 70 * s.z * (H / innerHeight) + H) % H;
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${s.h}, 90%, 88%, ${tw * s.z})`;
+      ctx.arc(x, y, s.r, 0, 6.283);
+      ctx.fill();
+    }
+    if (!reduce) {
+      if (Math.random() < .005) shooters.push({ x: Math.random() * W, y: Math.random() * H * .4, vx: 10 + Math.random() * 6, vy: 4 + Math.random() * 3, l: 1 });
+      shooters = shooters.filter(s => s.l > 0);
+      for (const s of shooters) {
+        const g = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * 9, s.y - s.vy * 9);
+        g.addColorStop(0, `rgba(255,255,255,${s.l})`);
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.strokeStyle = g; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx * 9, s.y - s.vy * 9); ctx.stroke();
+        s.x += s.vx; s.y += s.vy; s.l -= .015;
+      }
+    }
+    // parallax: aurora and hero orb layers
+    if (!reduce) {
+      document.getElementById('aurora').style.transform = `translate(${-smx * 40}px, ${-smy * 40}px)`;
+      document.querySelectorAll('.orb-layer').forEach(l => {
+        const d = +l.dataset.depth;
+        l.style.transform = `translate(${smx * d}px, ${smy * d}px)`;
+      });
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  /* ========== CURSOR TRACKING ========== */
+  const dot = document.getElementById('dot');
+  const ring = document.getElementById('ring');
+  let rx = 0, ry = 0, cx = 0, cy = 0;
+
+  addEventListener('mousemove', e => {
+    mx = e.clientX / innerWidth - .5;
+    my = e.clientY / innerHeight - .5;
+    cx = e.clientX; cy = e.clientY;
+    document.documentElement.style.setProperty('--mx', cx + 'px');
+    document.documentElement.style.setProperty('--my', cy + 'px');
+    if (fine) document.body.classList.add('cursor-on');
+    dot.style.transform = `translate(${cx}px, ${cy}px)`;
+  });
+  (function followRing() {
+    rx += (cx - rx) * .16; ry += (cy - ry) * .16;
+    ring.style.transform = `translate(${rx}px, ${ry}px)`;
+    requestAnimationFrame(followRing);
+  })();
+  document.querySelectorAll('a, button, .card, .mini').forEach(el => {
+    el.addEventListener('mouseenter', () => ring.classList.add('big'));
+    el.addEventListener('mouseleave', () => ring.classList.remove('big'));
+  });
+  document.addEventListener('mouseleave', () => document.body.classList.remove('cursor-on'));
+
+  /* ========== 3D TILT + SPOTLIGHT ON CARDS ========== */
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      card.style.setProperty('--cx', x + 'px');
+      card.style.setProperty('--cy', y + 'px');
+      if (!reduce) {
+        const rotY = (x / r.width - .5) * 10, rotX = -(y / r.height - .5) * 10;
+        card.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-6px)`;
+      }
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+
+  /* ========== TYPING EFFECT ========== */
+  const phrases = ['Python Developer', 'C Programmer', 'Web Developer', 'Student at BVRIT', 'Freelancer & Editor'];
+  const typedEl = document.getElementById('typed');
+  let pi = 0, ci = 0, del = false;
+  function type() {
+    const p = phrases[pi];
+    typedEl.textContent = p.slice(0, ci);
+    if (!del && ci === p.length) { del = true; return setTimeout(type, 1500); }
+    if (del && ci === 0) { del = false; pi = (pi + 1) % phrases.length; }
+    ci += del ? -1 : 1;
+    setTimeout(type, del ? 35 : 75);
+  }
+  reduce ? (typedEl.textContent = phrases.join(' · ')) : type();
+
+  /* ========== EXPLORE FILTER ========== */
+  const tabs = document.querySelectorAll('.tab');
+  const cards = document.querySelectorAll('.card');
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('on'));
+    tab.classList.add('on');
+    const f = tab.dataset.filter;
+    cards.forEach(c => c.classList.toggle('hide', f !== 'all' && c.dataset.cat !== f));
+  }));
+
+  /* ========== MOBILE MENU ========== */
+  const navLinks = document.getElementById('navLinks');
+  document.getElementById('menuBtn').addEventListener('click', () => navLinks.classList.toggle('open'));
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+  /* ========== SCROLL REVEAL + ACTIVE LINK ========== */
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('show'); io.unobserve(e.target); }
+  }), { threshold: .12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  const links = [...navLinks.querySelectorAll('a')];
+  const secs = links.map(a => document.querySelector(a.getAttribute('href')));
+  addEventListener('scroll', () => {
+    const y = scrollY + 160; let idx = 0;
+    secs.forEach((s, i) => { if (s.offsetTop <= y) idx = i; });
+    links.forEach((a, i) => a.classList.toggle('active', i === idx));
+  }, { passive: true });
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
